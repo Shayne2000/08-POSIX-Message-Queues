@@ -52,9 +52,46 @@
  */
 int task_struct_exchange(void) {
     /* TODO: implement task A */
-    (void)Q_EXCHANGE;
-    fprintf(stderr, "TODO: task_struct_exchange not implemented\n");
-    return 1;
+    // 1
+    mq_unlink(Q_EXCHANGE);
+
+    // 2
+    struct mq_attr att;
+    att.mq_maxmsg = 4;
+    att.mq_msgsize = MSG_BUF_SIZE;
+
+    if ((int)mq_open(Q_EXCHANGE, Q_EXCHANGE, O_CREAT | O_RDWR, 0660, &att) == -1) {
+        printf("error while openning message queue Q_EXCHANGE");
+        return -1;
+    }
+
+    // 3
+    pid_t processID = fork();
+
+    // 4
+    if (processID != 0) {
+        struct SensorReading r;
+        r.sensor_id = 7;
+        r.value = 42;
+
+        if (mq_send(Q_EXCHANGE, (*char)&r, sizeof(SensorReading), 0) == -1){
+            printf("error while sending message to Q_EXCHANGE");
+            return -1;
+        }
+
+        mq_close(Q_EXCHANGE);
+
+        waitpid(processID,NULL,0);
+        printf("parent: sent reading");
+        return 0;
+    }
+    
+    //5
+    if (mq_receive(Q_EXCHANGE, ) == -1){
+
+    }
+
+    
 }
 
 /*
